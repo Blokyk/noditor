@@ -1,39 +1,51 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# structial
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+Data structures for accelerating spatial lookup.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+Used by [`package:canvas`](../canvas/).
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+Currently implemented structures:
 
-## Getting started
+- Spatial hash grid
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+## Prerequisites
+
+This library depends on `dart:ui` (mainly for `Rect` and `Offset`), so you will
+need to be using Flutter.
+
+No other dependencies right now!
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+### Spatial hash grid
+
+A spatial hash grid is a structure to speed up looking up 2D objects in a given
+area or at a certain point. It stores a sparse list of "cells" that objects get
+mapped to based on their bounding box.
+
+Here's an example where the grid is initialized with a list of particles, and
+then it is used to detect all the particles around a mouse click (and turn
+them green):
 
 ```dart
-const like = 'sample';
+final particles = randomParticles(count: 1000);
+var grid = SpatialHashGrid<Particle>.of(
+  particles,
+  cellSize: 10.0,
+  boundsOf: (particle) => particle.bounds,
+);
+
+void onMouseClick(Offset clickPosition) {
+  var neighborhood = Rect.fromCircle(center: clickPosition, radius: 5.0);
+  var particlesNearClick = grid.queryArea(neighborhood);
+  for (var particle in particlesNearClick) {
+    particle.color = Colors.green;
+  }
+}
 ```
 
-## Additional information
-
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+You can insert and remove objects, but you can also update the position/bounds
+of any already-inserted item. It is also possible to retrieve the stored bounds
+of a given object with `SpatialHashGrid<T>.boundsOf`.

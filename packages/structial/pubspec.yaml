@@ -1,6 +1,6 @@
 name: structial
-description: "A new Flutter package project."
-version: 0.0.1
+description: "Data structures for spatial-looking acceleration"
+version: 1.0.0
 homepage:
 
 environment:
