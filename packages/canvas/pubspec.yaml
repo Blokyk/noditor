@@ -9,6 +9,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  structial: ^1.0.0
+  vector_math: ^2.2.0
 
 dev_dependencies:
 
@@ -17,6 +19,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  shaders:
+    - assets/grid.frag
 
   # To add assets to your package, add an assets section, like this:
   # assets:
