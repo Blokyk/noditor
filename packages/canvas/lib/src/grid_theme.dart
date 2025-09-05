@@ -8,17 +8,14 @@ final class GridTheme extends InheritedTheme {
 
   /// Retrieves the [GridThemeData] from the closest [GridTheme] ancestor.
   ///
+  /// This method returns null if there is no [GridTheme] ancestor.
+  ///
   /// When a widget uses this method, it is automatically rebuilt if the
   /// grid theme later changes, so that the changes can be applied.
-  static GridThemeData of(BuildContext context) {
+  static GridThemeData? of(BuildContext context) {
     final gridTheme = context.dependOnInheritedWidgetOfExactType<GridTheme>();
 
-    assert(
-      gridTheme != null,
-      "GridTheme.of called on a BuildContext without any GridTheme ancestor",
-    );
-
-    return gridTheme!.data;
+    return gridTheme?.data;
   }
 
   @override
@@ -49,7 +46,7 @@ final class GridThemeData {
 
   const GridThemeData({
     this.lineWidth = 1.0,
-    this.lineColor = const Color.fromARGB(64, 100, 100, 100),
+    this.lineColor = const Color.fromARGB(100, 100, 100, 100),
     this.cellSize = const Size(64, 64),
     this.intersectionSize = 2.0,
     this.intersectionColor = const Color.fromARGB(128, 150, 150, 150),

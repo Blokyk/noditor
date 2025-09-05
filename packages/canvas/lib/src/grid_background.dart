@@ -52,7 +52,7 @@ final class GridBackground extends StatefulWidget {
 }
 
 Future<FragmentProgram> _gridProg = FragmentProgram.fromAsset(
-  'assets/grid.frag',
+  'packages/canvas/shaders/grid.frag',
 );
 
 final class _GridBackgroundState extends State<GridBackground> {
@@ -80,7 +80,7 @@ final class _GridBackgroundState extends State<GridBackground> {
   @override
   Widget build(BuildContext context) {
     // todo: this feels wrong... there has to be another way to do this :thunk:
-    _gridPainter.theme = GridTheme.of(context);
+    _gridPainter.theme = GridTheme.of(context) ?? _gridPainter.theme;
 
     return RepaintBoundary(
       child: CustomPaint(
@@ -137,56 +137,49 @@ final class _GridPainter extends CustomPainter {
   }) : _offset = offset,
        _zoom = zoom,
        _theme = theme {
+    // load shader
     () async {
       _gridShader = (await _gridProg).fragmentShader();
+
+      // setup initial theme and viewport
+      _onThemeChange(theme);
+      _onViewportChange();
+
       repaintSignal.raise();
     }();
 
     // setup the listeners for the offset and zoom listenables
     offset.addListener(_onViewportChange);
     zoom.addListener(_onViewportChange);
-
-    // setup initial theme and viewport
-    _onThemeChange(theme);
-    _onViewportChange();
   }
 
-  void _onThemeChange(GridThemeData newTheme) {
+  void _onThemeChange(GridThemeData theme) {
     if (_gridShader == null) return;
 
     final shader =
         _gridShader!; // avoids extraneous null-checks because dart is dumb
 
     // uniform vec2 gridSpacing
-    shader.setFloat(0, newTheme.cellSize.width);
-    shader.setFloat(1, newTheme.cellSize.height);
+    shader.setFloat(0, theme.cellSize.width);
+    shader.setFloat(1, theme.cellSize.height);
 
     // uniform float lineWidth
-    shader.setFloat(2, newTheme.lineWidth);
+    shader.setFloat(2, theme.lineWidth);
 
     // uniform vec4 lineColor
-    shader.setFloat(3, newTheme.lineColor.r * newTheme.lineColor.a);
-    shader.setFloat(4, newTheme.lineColor.g * newTheme.lineColor.a);
-    shader.setFloat(5, newTheme.lineColor.b * newTheme.lineColor.a);
-    shader.setFloat(6, newTheme.lineColor.a);
+    shader.setFloat(3, theme.lineColor.r * theme.lineColor.a);
+    shader.setFloat(4, theme.lineColor.g * theme.lineColor.a);
+    shader.setFloat(5, theme.lineColor.b * theme.lineColor.a);
+    shader.setFloat(6, theme.lineColor.a);
 
     // uniform float intersectionRadius
-    shader.setFloat(7, newTheme.intersectionSize);
+    shader.setFloat(7, theme.intersectionSize);
 
     // uniform vec4 intersectionColor
-    shader.setFloat(
-      8,
-      newTheme.intersectionColor.r * newTheme.intersectionColor.a,
-    );
-    shader.setFloat(
-      9,
-      newTheme.intersectionColor.g * newTheme.intersectionColor.a,
-    );
-    shader.setFloat(
-      10,
-      newTheme.intersectionColor.b * newTheme.intersectionColor.a,
-    );
-    shader.setFloat(11, newTheme.intersectionColor.a);
+    shader.setFloat(8, theme.intersectionColor.r * theme.intersectionColor.a);
+    shader.setFloat(9, theme.intersectionColor.g * theme.intersectionColor.a);
+    shader.setFloat(10, theme.intersectionColor.b * theme.intersectionColor.a);
+    shader.setFloat(11, theme.intersectionColor.a);
 
     repaintSignal.raise();
   }
@@ -202,12 +195,12 @@ final class _GridPainter extends CustomPainter {
     // 3. offset the canvas by half its size (simplifies the shader)
     Matrix4 viewportTransform = Matrix4.identity()
       ..translateByDouble(size.width / 2, size.height / 2, 0, 1.0)
-      ..scaleByDouble(zoom.value, zoom.value, 0, 1.0)
+      ..scaleByDouble(zoom.value, zoom.value, 1.0, 1.0)
       ..translateByDouble(offset.value.dx, offset.value.dy, 0, 1.0);
 
     canvas.transform(viewportTransform.storage);
 
-    canvas.drawPaint(Paint()..shader = _gridShader);
+    canvas.drawPaint(Paint()..shader = _gridShader!);
   }
 
   @override
@@ -215,7 +208,7 @@ final class _GridPainter extends CustomPainter {
       // the only times we need to rebuild are when the `repaint` signal
       // is fired, [_GridBackgroundState] only ever passes the same instance
       // to [CustomPaint]
-      false;
+      true;
 
   final Signal repaintSignal = Signal();
 
