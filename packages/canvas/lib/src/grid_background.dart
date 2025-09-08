@@ -156,8 +156,7 @@ final class _GridPainter extends CustomPainter {
   void _onThemeChange(GridThemeData theme) {
     if (_gridShader == null) return;
 
-    final shader =
-        _gridShader!; // avoids extraneous null-checks because dart is dumb
+    final shader = _gridShader!; // avoids extraneous null-checks (dart is dumb)
 
     // uniform vec2 gridSpacing
     shader.setFloat(0, theme.cellSize.width);
@@ -184,7 +183,17 @@ final class _GridPainter extends CustomPainter {
     repaintSignal.raise();
   }
 
-  void _onViewportChange() => repaintSignal.raise();
+  void _onViewportChange() {
+    if (_gridShader == null) return;
+
+    final shader = _gridShader!; // avoids extraneous null-checks (dart is dumb)
+
+    shader.setFloat(12, zoom.value);
+    shader.setFloat(13, offset.value.dx);
+    shader.setFloat(14, offset.value.dy);
+
+    repaintSignal.raise();
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
