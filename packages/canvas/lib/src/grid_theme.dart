@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 final class GridTheme extends InheritedTheme {
   const GridTheme({super.key, required this.data, required super.child});
@@ -18,6 +18,12 @@ final class GridTheme extends InheritedTheme {
     return gridTheme?.data;
   }
 
+  static GridThemeData defaultOf(BuildContext context) =>
+      switch (Theme.of(context).brightness) {
+        Brightness.dark => const GridThemeData.dark(),
+        Brightness.light => const GridThemeData(),
+      };
+
   @override
   Widget wrap(BuildContext context, Widget child) =>
       GridTheme(data: data, child: child);
@@ -32,6 +38,9 @@ final class GridThemeData {
   /// spacing between each grid line on the X and Y axes.
   final Size cellSize;
 
+  /// The color of the background
+  final Color? backgroundColor;
+
   /// The width (in pixel) of the grid lines
   final double lineWidth;
 
@@ -44,12 +53,22 @@ final class GridThemeData {
   /// The color of the dot marking each intersecting grid line
   final Color intersectionColor;
 
-  const GridThemeData({
+  const GridThemeData.dark({
     this.lineWidth = 1.0,
     this.lineColor = const Color.fromARGB(100, 100, 100, 100),
+    this.backgroundColor,
     this.cellSize = const Size(64, 64),
     this.intersectionSize = 2.0,
     this.intersectionColor = const Color.fromARGB(128, 150, 150, 150),
+  });
+
+  const GridThemeData({
+    this.lineWidth = 1.0,
+    this.lineColor = const Color.fromARGB(128, 150, 150, 150),
+    this.backgroundColor,
+    this.cellSize = const Size(64, 64),
+    this.intersectionSize = 2.0,
+    this.intersectionColor = const Color.fromARGB(100, 100, 100, 100),
   });
 
   @override
