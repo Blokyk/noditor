@@ -54,7 +54,7 @@ final class GridThemeData {
   final Size cellSize;
 
   /// The color of the background
-  final Color? backgroundColor;
+  final Color backgroundColor;
 
   /// The width (in pixel) of the grid lines
   final double lineWidth;
@@ -71,7 +71,7 @@ final class GridThemeData {
   const GridThemeData.dark({
     this.lineWidth = 1.0,
     this.lineColor = const Color.fromARGB(100, 100, 100, 100),
-    this.backgroundColor,
+    this.backgroundColor = Colors.transparent,
     this.cellSize = const Size(64, 64),
     this.intersectionSize = 2.0,
     this.intersectionColor = const Color.fromARGB(128, 150, 150, 150),
@@ -80,7 +80,7 @@ final class GridThemeData {
   const GridThemeData({
     this.lineWidth = 1.0,
     this.lineColor = const Color.fromARGB(128, 150, 150, 150),
-    this.backgroundColor,
+    this.backgroundColor = Colors.transparent,
     this.cellSize = const Size(64, 64),
     this.intersectionSize = 2.0,
     this.intersectionColor = const Color.fromARGB(100, 100, 100, 100),

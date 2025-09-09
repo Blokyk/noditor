@@ -1,5 +1,7 @@
 #version 460 core
 
+#extension GL_GOOGLE_include_directive : enable
+
 #include <flutter/runtime_effect.glsl>
 
 precision highp float;
@@ -9,8 +11,9 @@ layout(location = 2) uniform float lineWidth;
 layout(location = 3) uniform vec4 lineColor;
 layout(location = 7) uniform float intersectionRadius;
 layout(location = 8) uniform vec4 intersectionColor;
-layout(location = 12) uniform float zoom;
-layout(location = 13) uniform vec2 offset;
+layout(location = 12) uniform vec4 backgroundColor;
+layout(location = 16) uniform float zoom;
+layout(location = 17) uniform vec2 offset;
 // layout(location = 15) uniform vec2 size;
 
 out vec4 fragColor;

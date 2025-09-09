@@ -174,19 +174,25 @@ final class _GridPainter extends CustomPainter {
     shader.setFloat(2, theme.lineWidth);
 
     // uniform vec4 lineColor
-    shader.setFloat(3, theme.lineColor.r * theme.lineColor.a);
-    shader.setFloat(4, theme.lineColor.g * theme.lineColor.a);
-    shader.setFloat(5, theme.lineColor.b * theme.lineColor.a);
+    shader.setFloat(3, theme.lineColor.r);
+    shader.setFloat(4, theme.lineColor.g);
+    shader.setFloat(5, theme.lineColor.b);
     shader.setFloat(6, theme.lineColor.a);
 
     // uniform float intersectionRadius
     shader.setFloat(7, theme.intersectionSize);
 
     // uniform vec4 intersectionColor
-    shader.setFloat(8, theme.intersectionColor.r * theme.intersectionColor.a);
-    shader.setFloat(9, theme.intersectionColor.g * theme.intersectionColor.a);
-    shader.setFloat(10, theme.intersectionColor.b * theme.intersectionColor.a);
+    shader.setFloat(8, theme.intersectionColor.r);
+    shader.setFloat(9, theme.intersectionColor.g);
+    shader.setFloat(10, theme.intersectionColor.b);
     shader.setFloat(11, theme.intersectionColor.a);
+
+    // uniform vec4 backgroundColor
+    shader.setFloat(12, theme.backgroundColor.r);
+    shader.setFloat(13, theme.backgroundColor.g);
+    shader.setFloat(14, theme.backgroundColor.b);
+    shader.setFloat(15, theme.backgroundColor.a);
 
     repaintSignal.raise();
   }
@@ -196,9 +202,9 @@ final class _GridPainter extends CustomPainter {
 
     final shader = _gridShader!; // avoids extraneous null-checks (dart is dumb)
 
-    shader.setFloat(12, zoom.value);
-    shader.setFloat(13, offset.value.dx);
-    shader.setFloat(14, offset.value.dy);
+    shader.setFloat(16, zoom.value);
+    shader.setFloat(17, offset.value.dx);
+    shader.setFloat(18, offset.value.dy);
 
     repaintSignal.raise();
   }
@@ -217,6 +223,7 @@ final class _GridPainter extends CustomPainter {
 
     canvas.transform(viewportTransform.storage);
 
+    canvas.drawColor(theme.backgroundColor, BlendMode.src);
     canvas.drawPaint(Paint()..shader = _gridShader!);
   }
 
