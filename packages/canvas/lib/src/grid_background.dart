@@ -215,8 +215,6 @@ final class _GridPainter extends CustomPainter {
       ..scaleByDouble(zoom.value, zoom.value, 1.0, 1.0)
       ..translateByDouble(offset.value.dx, offset.value.dy, 0, 1.0);
 
-    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
-
     canvas.transform(viewportTransform.storage);
 
     canvas.drawPaint(Paint()..shader = _gridShader!);
