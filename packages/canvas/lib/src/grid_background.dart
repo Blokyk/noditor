@@ -23,12 +23,12 @@ final class GridBackground extends StatefulWidget {
   /// is equivalent to a logical pixel.
   final ValueListenable<Offset> offset;
 
-  /// How zoomed-in the grid should be. By default,
+  /// How zoomed-in the grid should be. By default, this is 1.0.
   final ValueListenable<double> zoom;
 
   final HitTestBehavior hitTestBehavior;
 
-  final Size size;
+  final Size? size;
 
   /// The widget drawn over the grid background.
   ///
@@ -41,11 +41,11 @@ final class GridBackground extends StatefulWidget {
     this.offset = const AlwaysStoppedAnimation(Offset.zero),
     this.zoom = const AlwaysStoppedAnimation(1.0),
     this.hitTestBehavior = HitTestBehavior.opaque,
-  }) : size = Size.zero;
+  }) : size = null;
 
   const GridBackground.empty({
     super.key,
-    required this.size,
+    this.size,
     this.offset = const AlwaysStoppedAnimation(Offset.zero),
     this.zoom = const AlwaysStoppedAnimation(1.0),
     this.hitTestBehavior = HitTestBehavior.opaque,
@@ -91,7 +91,7 @@ final class _GridBackgroundState extends State<GridBackground> {
       child: CustomPaint(
         painter: _gridPainter,
         isComplex: true,
-        size: widget.size,
+        size: widget.size ?? Size.zero,
         child: widget.child,
       ),
     );
@@ -231,9 +231,10 @@ final class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GridPainter oldDelegate) =>
-      // the only times we need to rebuild are when the `repaint` signal
-      // is fired, [_GridBackgroundState] only ever passes the same instance
-      // to [CustomPaint]
+      // [_GridBackgroundState] only ever passes the same instance
+      // to [CustomPaint], the only times we need to repaint are
+      // when the `repaint` signal is fired. so if we're ever called,
+      // it's probably cause of hot reload
       true;
 
   final Signal repaintSignal = Signal();
