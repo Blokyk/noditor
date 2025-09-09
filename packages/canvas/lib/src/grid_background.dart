@@ -150,7 +150,8 @@ final class _GridPainter extends CustomPainter {
       _gridShader = (await _gridProg).fragmentShader();
 
       // setup initial theme and viewport
-      _onThemeChange(theme);
+      // (note: don't use ctor values/locals to avoid race condition)
+      _onThemeChange(_theme);
       _onViewportChange();
 
       repaintSignal.raise();
@@ -223,7 +224,8 @@ final class _GridPainter extends CustomPainter {
 
     canvas.transform(viewportTransform.storage);
 
-    canvas.drawColor(theme.backgroundColor, BlendMode.src);
+    // we need srcATop for the background
+    canvas.drawColor(theme.backgroundColor, BlendMode.srcATop);
     canvas.drawPaint(Paint()..shader = _gridShader!);
   }
 

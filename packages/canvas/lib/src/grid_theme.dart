@@ -1,5 +1,5 @@
+import 'package:canvas/src/utils/color_ext.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 
 final class GridTheme extends InheritedTheme {
   const GridTheme({super.key, required this.data, required super.child});
@@ -32,12 +32,16 @@ final class GridTheme extends InheritedTheme {
   /// Returns the default [GridThemeData] given the current context.
   /// In practice, this returns a dark or bright GridThemeData based
   /// on the current theme's brightness.
-  static GridThemeData defaultOf(BuildContext context) =>
-      switch (Theme.maybeBrightnessOf(context) ??
-      CupertinoTheme.brightnessOf(context)) {
-        Brightness.dark => const GridThemeData.dark(),
-        Brightness.light => const GridThemeData(),
-      };
+  static GridThemeData defaultOf(BuildContext context) {
+    var theme = Theme.of(context);
+    var colorScheme = theme.colorScheme;
+
+    return GridThemeData(
+      backgroundColor: theme.canvasColor,
+      lineColor: theme.dividerColor.adjust(theme.brightness, .65),
+      intersectionColor: colorScheme.onSurface.adjust(theme.brightness, .65),
+    );
+  }
 
   @override
   Widget wrap(BuildContext context, Widget child) =>
@@ -68,33 +72,27 @@ final class GridThemeData {
   /// The color of the dot marking each intersecting grid line
   final Color intersectionColor;
 
-  const GridThemeData.dark({
+  const GridThemeData({
     this.lineWidth = 1.0,
     this.lineColor = const Color.fromARGB(100, 100, 100, 100),
-    this.backgroundColor = Colors.transparent,
+    this.backgroundColor = Colors.black,
     this.cellSize = const Size(64, 64),
     this.intersectionSize = 2.0,
     this.intersectionColor = const Color.fromARGB(128, 150, 150, 150),
   });
 
-  const GridThemeData({
-    this.lineWidth = 1.0,
-    this.lineColor = const Color.fromARGB(128, 150, 150, 150),
-    this.backgroundColor = Colors.transparent,
-    this.cellSize = const Size(64, 64),
-    this.intersectionSize = 2.0,
-    this.intersectionColor = const Color.fromARGB(100, 100, 100, 100),
-  });
+  // todo: add .withValues method or .copy/.copyFrom/.from ctor
+  // (and also do that for GridTheme, so that it takes the ambient GridTheme and modifies just one part)
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
       (other is GridThemeData &&
-          cellSize == other.cellSize &&
-          lineWidth == other.lineWidth &&
-          lineColor == other.lineColor &&
-          intersectionSize == other.intersectionSize &&
-          intersectionColor == other.intersectionColor);
+      cellSize == other.cellSize &&
+      lineWidth == other.lineWidth &&
+      lineColor == other.lineColor &&
+      intersectionSize == other.intersectionSize &&
+      intersectionColor == other.intersectionColor &&
+      backgroundColor == other.backgroundColor);
 
   @override
   int get hashCode => Object.hash(
@@ -103,5 +101,6 @@ final class GridThemeData {
     lineColor,
     intersectionSize,
     intersectionColor,
+    backgroundColor,
   );
 }
