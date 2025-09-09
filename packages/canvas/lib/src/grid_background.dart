@@ -5,6 +5,7 @@ import 'package:canvas/src/utils/signal.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/foundation.dart';
 
+/// {@template canvas.GridBackground.description}
 /// A widget that allows a child to be displayed over a configurable
 /// infinite grid background. This acts like [GridPaper], but it draws
 /// the grid underneath the child instead of above it, and allows one
@@ -12,11 +13,14 @@ import 'package:flutter/foundation.dart';
 ///
 /// The grid's appearance can be customized by inserting a [GridTheme] widget
 /// as a parent.
+/// {@endtemplate}
 ///
-/// For best performance in expected scenarios, this widget wraps
+/// {@template canvas.GridBackground.perf}
+/// Note: for best performance in expected scenarios, this widget wraps
 /// *itself* in a [RepaintBoundary], to avoid repainting the whole app
 /// every time the grid is animated; thus, there is no need to wrap
 /// this in a separate [RepaintBoundary].
+/// {@endtemplate}
 final class GridBackground extends StatefulWidget {
   /// The number of units to offset the grid by, in the x and y direction.
   /// This offset is applied before the zoom, but at zoom = 1.0, a unit
@@ -26,8 +30,23 @@ final class GridBackground extends StatefulWidget {
   /// How zoomed-in the grid should be. By default, this is 1.0.
   final ValueListenable<double> zoom;
 
+  /// How the background should react to being hit.
+  ///
+  /// If set to either [HitTestBehavior.opaque] (the default) or
+  /// [HitTestBehavior.deferToChild], the background will absorb any hits,
+  /// preventing any widget visually behind [GridBackground] from being hit.
+  ///
+  /// If set to [HitTestBehavior.translucent], the background will allow
+  /// targets visually behind it to receive hit tests.
+  ///
+  /// This does not affect how the child widget is hit-tested, so a child
+  /// [GestureDetector] would still be able to detect hits.
   final HitTestBehavior hitTestBehavior;
 
+  /// The size of this widget, in case the [child] widget is null.
+  /// If not set, this widget will simply expand as much as it can.
+  ///
+  /// In case [child] is not null, this is irrelevant.
   final Size? size;
 
   /// The widget drawn over the grid background.
@@ -35,6 +54,11 @@ final class GridBackground extends StatefulWidget {
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget? child;
 
+  /// {@macro canvas.GridBackground.description}
+  ///
+  /// If there is no need for a [child] widget, but instead you simply wish
+  /// to give this widget a size, consider using the [GridBackground.empty]
+  /// constructor instead.
   const GridBackground({
     super.key,
     required this.child,
@@ -43,6 +67,8 @@ final class GridBackground extends StatefulWidget {
     this.hitTestBehavior = HitTestBehavior.opaque,
   }) : size = null;
 
+  /// Creates a [GridBackground] that sizes itself based on the given [size]
+  /// instead of a [child] widget.
   const GridBackground.empty({
     super.key,
     this.size,
