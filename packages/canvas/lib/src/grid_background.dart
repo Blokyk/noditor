@@ -80,7 +80,7 @@ final class _GridBackgroundState extends State<GridBackground> {
   @override
   Widget build(BuildContext context) {
     // todo: this feels wrong... there has to be another way to do this :thunk:
-    _gridPainter.theme = GridTheme.of(context) ?? GridTheme.defaultOf(context);
+    _gridPainter.theme = GridTheme.of(context);
 
     return RepaintBoundary(
       child: CustomPaint(

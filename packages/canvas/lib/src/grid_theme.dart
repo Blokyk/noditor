@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 final class GridTheme extends InheritedTheme {
   const GridTheme({super.key, required this.data, required super.child});
@@ -8,18 +9,32 @@ final class GridTheme extends InheritedTheme {
 
   /// Retrieves the [GridThemeData] from the closest [GridTheme] ancestor.
   ///
+  /// If no [GridTheme] can be found in the context, returns the
+  /// result of [defaultOf] for the given context.
+  ///
+  /// When a widget uses this method, it is automatically rebuilt if the
+  /// grid theme later changes, so that the changes can be applied.
+  static GridThemeData of(BuildContext context) =>
+      maybeOf(context) ?? defaultOf(context);
+
+  /// Retrieves the [GridThemeData] from the closest [GridTheme] ancestor.
+  ///
   /// This method returns null if there is no [GridTheme] ancestor.
   ///
   /// When a widget uses this method, it is automatically rebuilt if the
   /// grid theme later changes, so that the changes can be applied.
-  static GridThemeData? of(BuildContext context) {
+  static GridThemeData? maybeOf(BuildContext context) {
     final gridTheme = context.dependOnInheritedWidgetOfExactType<GridTheme>();
 
     return gridTheme?.data;
   }
 
+  /// Returns the default [GridThemeData] given the current context.
+  /// In practice, this returns a dark or bright GridThemeData based
+  /// on the current theme's brightness.
   static GridThemeData defaultOf(BuildContext context) =>
-      switch (Theme.of(context).brightness) {
+      switch (Theme.maybeBrightnessOf(context) ??
+      CupertinoTheme.brightnessOf(context)) {
         Brightness.dark => const GridThemeData.dark(),
         Brightness.light => const GridThemeData(),
       };
