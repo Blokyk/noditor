@@ -26,6 +26,8 @@ final class GridBackground extends StatefulWidget {
   /// How zoomed-in the grid should be. By default,
   final ValueListenable<double> zoom;
 
+  final HitTestBehavior hitTestBehavior;
+
   final Size size;
 
   /// The widget drawn over the grid background.
@@ -38,6 +40,7 @@ final class GridBackground extends StatefulWidget {
     required this.child,
     this.offset = const AlwaysStoppedAnimation(Offset.zero),
     this.zoom = const AlwaysStoppedAnimation(1.0),
+    this.hitTestBehavior = HitTestBehavior.opaque,
   }) : size = Size.zero;
 
   const GridBackground.empty({
@@ -45,6 +48,7 @@ final class GridBackground extends StatefulWidget {
     required this.size,
     this.offset = const AlwaysStoppedAnimation(Offset.zero),
     this.zoom = const AlwaysStoppedAnimation(1.0),
+    this.hitTestBehavior = HitTestBehavior.opaque,
   }) : child = null;
 
   @override
@@ -66,6 +70,7 @@ final class _GridBackgroundState extends State<GridBackground> {
       offset: widget.offset,
       zoom: widget.zoom,
       theme: const GridThemeData(),
+      hitTestBehavior: widget.hitTestBehavior,
     );
   }
 
@@ -130,10 +135,13 @@ final class _GridPainter extends CustomPainter {
     _theme = newTheme;
   }
 
+  HitTestBehavior hitTestBehavior;
+
   _GridPainter({
     required ValueListenable<Offset> offset,
     required ValueListenable<double> zoom,
     required GridThemeData theme,
+    required this.hitTestBehavior,
   }) : _offset = offset,
        _zoom = zoom,
        _theme = theme {
@@ -235,4 +243,11 @@ final class _GridPainter extends CustomPainter {
   @override
   void removeListener(VoidCallback listener) =>
       repaintSignal.removeListener(listener);
+
+  @override
+  bool? hitTest(Offset position) => switch (hitTestBehavior) {
+    HitTestBehavior.opaque => true,
+    HitTestBehavior.translucent => false,
+    HitTestBehavior.deferToChild => false,
+  };
 }
