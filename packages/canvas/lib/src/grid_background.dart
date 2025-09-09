@@ -79,7 +79,7 @@ final class _GridBackgroundState extends State<GridBackground> {
     super.didUpdateWidget(oldWidget);
 
     _gridPainter.offset = widget.offset;
-    _gridPainter._zoom = widget.zoom;
+    _gridPainter.zoom = widget.zoom;
   }
 
   @override
