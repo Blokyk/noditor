@@ -8,9 +8,18 @@ final class Canvas extends StatefulWidget {
   final List<Widget> objects;
 
   // todo: HitTestBehavior
-  // todo: cellSize
 
-  const Canvas({super.key, required this.objects});
+  /// The size of the cells used for accelerating various operations in the
+  /// canvas.
+  ///
+  /// {@macro structial.spatial_grid.cellSize.perf}
+  ///
+  /// This value should change as little as possible during the lifetime of
+  /// this canvas, as modifying it involves recomputing the position and bounds
+  /// of every object in the canvas.
+  final double cellSize;
+
+  const Canvas({super.key, required this.objects, this.cellSize = 1024});
 
   @override
   State<Canvas> createState() => _CanvasState();
@@ -44,6 +53,7 @@ final class _CanvasState extends State<Canvas> {
       CanvasObjectsContainer(
         offset: _offset,
         zoom: _zoom,
+        cellSize: widget.cellSize,
         children: widget.objects,
       ),
     ],
@@ -103,7 +113,7 @@ final class CanvasObject extends ParentDataWidget<CanvasObjectParentData> {
   /// depth, and will be hit-tested first.
   ///
   /// If this is unset, the reverse order of the child in the canvas object
-  /// list (i.e. [Canvas.children]) will be used instead: children defined
+  /// list (i.e. [Canvas.objects]) will be used instead: children defined
   /// earlier in the list will be "deeper" than (or "behind") their later
   /// depth-less siblings. This calculation is unaffected by any sibling with
   /// a defined depth.

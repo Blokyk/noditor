@@ -9,16 +9,23 @@ final class CanvasObjectsContainer extends MultiChildRenderObjectWidget {
   final ValueListenable<double> zoom;
   final ValueListenable<Offset> offset;
 
+  final double cellSize;
+
   const CanvasObjectsContainer({
     super.key,
     required super.children,
     required this.zoom,
     required this.offset,
+    required this.cellSize,
   });
 
   @override
   RenderCanvasObjectsContainer createRenderObject(BuildContext context) =>
-      RenderCanvasObjectsContainer(zoom: zoom, offset: offset);
+      RenderCanvasObjectsContainer(
+        zoom: zoom,
+        offset: offset,
+        cellSize: cellSize,
+      );
 
   @override
   void updateRenderObject(
@@ -27,7 +34,8 @@ final class CanvasObjectsContainer extends MultiChildRenderObjectWidget {
   ) {
     renderObject
       ..zoom = zoom
-      ..offset = offset;
+      ..offset = offset
+      ..cellSize = cellSize;
   }
 }
 
@@ -38,9 +46,12 @@ final class RenderCanvasObjectsContainer extends RenderBox
   RenderCanvasObjectsContainer({
     required ValueListenable<double> zoom,
     required ValueListenable<Offset> offset,
+    required double cellSize,
     List<RenderBox>? children,
   }) : _zoom = zoom,
-       _offset = offset {
+       _offset = offset,
+       _cellSize = cellSize,
+       _positionedChildren = SpatialHashGrid(cellSize: cellSize) {
     addAll(children);
 
     zoom.addListener(_markViewportChanged);
@@ -48,10 +59,21 @@ final class RenderCanvasObjectsContainer extends RenderBox
     _markViewportChanged();
   }
 
-  final SpatialHashGrid<RenderBox> _positionedChildren = SpatialHashGrid(
-    // todo: wtf do we do for the cell size???
-    cellSize: 1024.0,
-  );
+  double _cellSize;
+  double get cellSize => _cellSize;
+  set cellSize(double newSize) {
+    if (_cellSize == newSize) return;
+
+    _cellSize = newSize;
+
+    // rebuild the grid with the new size
+    _positionedChildren = SpatialHashGrid.from(
+      _positionedChildren,
+      cellSize: newSize,
+    );
+  }
+
+  SpatialHashGrid<RenderBox> _positionedChildren;
 
   @override
   bool get isRepaintBoundary => true;
