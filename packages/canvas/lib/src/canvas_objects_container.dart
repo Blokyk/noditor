@@ -9,6 +9,8 @@ final class CanvasObjectsContainer extends MultiChildRenderObjectWidget {
   final ValueListenable<double> zoom;
   final ValueListenable<Offset> offset;
 
+  final HitTestBehavior hitTestBehavior;
+
   final double cellSize;
 
   const CanvasObjectsContainer({
@@ -17,6 +19,7 @@ final class CanvasObjectsContainer extends MultiChildRenderObjectWidget {
     required this.zoom,
     required this.offset,
     required this.cellSize,
+    required this.hitTestBehavior,
   });
 
   @override
@@ -25,6 +28,7 @@ final class CanvasObjectsContainer extends MultiChildRenderObjectWidget {
         zoom: zoom,
         offset: offset,
         cellSize: cellSize,
+        hitTestBehavior: hitTestBehavior,
       );
 
   @override
@@ -35,7 +39,8 @@ final class CanvasObjectsContainer extends MultiChildRenderObjectWidget {
     renderObject
       ..zoom = zoom
       ..offset = offset
-      ..cellSize = cellSize;
+      ..cellSize = cellSize
+      ..hitTestBehavior = hitTestBehavior;
   }
 }
 
@@ -47,6 +52,7 @@ final class RenderCanvasObjectsContainer extends RenderBox
     required ValueListenable<double> zoom,
     required ValueListenable<Offset> offset,
     required double cellSize,
+    required this.hitTestBehavior,
     List<RenderBox>? children,
   }) : _zoom = zoom,
        _offset = offset,
@@ -67,6 +73,8 @@ final class RenderCanvasObjectsContainer extends RenderBox
 
   @override
   bool get isRepaintBoundary => true;
+
+  HitTestBehavior hitTestBehavior;
 
   double _cellSize;
   double get cellSize => _cellSize;
@@ -260,39 +268,50 @@ final class RenderCanvasObjectsContainer extends RenderBox
   // | HIT-TEST |
   // |----------|
 
-  // todo: implement hitTestSelf and add HitTestBehavior parameter to Canvas
+  @override
+  bool hitTestSelf(Offset position) =>
+      // super.hitTest (our caller) already checks that [position] is in-bounds
+      hitTestBehavior == HitTestBehavior.opaque;
 
   @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
-      // transform the hit position from global/view coords to our world coord
-      result.addWithRawTransform(
-        transform: _viewToWorld,
-        position: position,
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    var hitAny = result.addWithRawTransform(
+      transform: _viewToWorld,
+      position: position,
 
-        // hitTest with the transformed position
-        hitTest: (result, position) {
-          // get all objects that overlap with the hit position
-          var childrenAtPosition = _positionedChildren.queryPoint(position);
+      // hitTest with the transformed position
+      hitTest: (result, position) {
+        // get all objects that overlap with the hit position
+        var childrenAtPosition = _positionedChildren.queryPoint(position);
 
-          // then hit test each child, from closest (smallest depth) to furthest (biggest depth)
-          for (var child in childrenAtPosition.sortedByDepth) {
-            var childPosition = (child.parentData as BoxParentData).offset;
+        // then hit test each child, from closest (smallest depth) to furthest (biggest depth)
+        for (var child in childrenAtPosition.sortedByDepth) {
+          var childPosition = (child.parentData as BoxParentData).offset;
 
-            // offset the position to the child's position and hit test it
-            var childIsHit = result.addWithPaintOffset(
-              offset: childPosition,
-              position: position,
-              hitTest: (result, childPosition) =>
-                  child.hitTest(result, position: childPosition),
-            );
+          // offset the position to the child's position and hit test it
+          var childIsHit = result.addWithPaintOffset(
+            offset: childPosition,
+            position: position,
+            hitTest: (result, childPosition) =>
+                child.hitTest(result, position: childPosition),
+          );
 
-            if (childIsHit) return true;
-          }
+          if (childIsHit) return true;
+        }
 
-          // we didn't hit any child
-          return false;
-        },
-      );
+        // we didn't hit any child
+        return false;
+      },
+    );
+
+    // if we didn't hit any child but we have [HitTestBehavior.translucent],
+    // then add ourselves as a hit *but don't return true*
+    if (!hitAny && hitTestBehavior == HitTestBehavior.translucent) {
+      result.add(BoxHitTestEntry(this, position));
+    }
+
+    return hitAny;
+  }
 
   // |------|
   // | MISC |
