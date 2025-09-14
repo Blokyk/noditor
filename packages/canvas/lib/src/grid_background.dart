@@ -5,6 +5,8 @@ import 'package:canvas/src/utils/signal.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/foundation.dart';
 
+// todo: rewrite this as a SingleChildRenderObject
+
 /// {@template canvas.GridBackground.description}
 /// A widget that allows a child to be displayed over a configurable
 /// infinite grid background. This acts like [GridPaper], but it draws
@@ -79,6 +81,17 @@ final class GridBackground extends StatefulWidget {
 
   @override
   State<GridBackground> createState() => _GridBackgroundState();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DoubleProperty("zoom", zoom.value))
+      ..add(DiagnosticsProperty("offset", offset.value))
+      ..add(DiagnosticsProperty("size", size))
+      ..add(ObjectFlagProperty.has("Child", child))
+      ..add(EnumProperty("hitTestBehavior", hitTestBehavior));
+  }
 }
 
 Future<FragmentProgram> _gridProg = FragmentProgram.fromAsset(
@@ -119,6 +132,18 @@ final class _GridBackgroundState extends State<GridBackground> {
         isComplex: true,
         size: widget.size ?? Size.zero,
         child: widget.child,
+      ),
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(
+      DiagnosticableNode(
+        name: "Theme",
+        value: _gridPainter.theme,
+        style: DiagnosticsTreeStyle.singleLine,
       ),
     );
   }

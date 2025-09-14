@@ -30,9 +30,6 @@ class _ZoomDragDetectorState extends State<ZoomDragDetector> {
   Widget build(BuildContext context) => InteractiveViewer(
     minScale: double.minPositive,
     maxScale: double.maxFinite,
-    onInteractionStart: (details) => print('\x1b[32m$details\x1b[0m'),
-    onInteractionUpdate: (details) => print('\x1b[2m$details\x1b[0m'),
-    onInteractionEnd: (details) => print('\x1b[31m$details\x1b[0m'),
     boundaryMargin: EdgeInsets.all(double.infinity),
     transformationController: _transformController,
     // clipBehavior: Clip.none, // GridBackground already clips itself

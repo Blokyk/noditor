@@ -1,5 +1,6 @@
 import 'package:canvas/src/utils/color_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 final class GridTheme extends InheritedTheme {
   const GridTheme({super.key, required this.data, required super.child});
@@ -52,7 +53,7 @@ final class GridTheme extends InheritedTheme {
 }
 
 @immutable
-final class GridThemeData {
+final class GridThemeData with Diagnosticable {
   /// The size (in pixels) of each grid cell; in other words, the
   /// spacing between each grid line on the X and Y axes.
   final Size cellSize;
@@ -103,4 +104,32 @@ final class GridThemeData {
     intersectionColor,
     backgroundColor,
   );
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(
+        DiagnosticsBlock(
+          name: "lines",
+          properties: [
+            ColorProperty("color", lineColor),
+            DoubleProperty("width", lineWidth),
+          ],
+          style: DiagnosticsTreeStyle.singleLine,
+        ),
+      )
+      ..add(
+        DiagnosticsBlock(
+          name: "intersections",
+          properties: [
+            ColorProperty("color", intersectionColor),
+            DoubleProperty("size", intersectionSize),
+          ],
+          style: DiagnosticsTreeStyle.singleLine,
+        ),
+      )
+      ..add(ColorProperty("background", backgroundColor))
+      ..add(DiagnosticsProperty("cellSize", cellSize));
+  }
 }

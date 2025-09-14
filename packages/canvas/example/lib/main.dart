@@ -19,7 +19,37 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-      home: Material(child: Canvas(objects: [])),
+      home: Material(child: MyHome()),
+    );
+  }
+}
+
+class MyHome extends StatefulWidget {
+  const MyHome({super.key});
+
+  @override
+  State<MyHome> createState() => _MyHomeState();
+}
+
+class _MyHomeState extends State<MyHome> {
+  @override
+  Widget build(BuildContext context) {
+    return Canvas(
+      objects: [
+        Positioned(
+          top: 0,
+          left: 0,
+          child: Listener(
+            onPointerMove: (event) => print("move @ $event"),
+            child: Container(
+              width: 1280,
+              height: 720,
+              color: Colors.pink[200],
+              child: Text("hello"),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
