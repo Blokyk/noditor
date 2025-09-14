@@ -1,4 +1,5 @@
-import 'package:canvas/src/canvas_objects_parent_data.dart';
+import 'package:canvas/canvas.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart';
@@ -79,33 +80,11 @@ final class RenderCanvasObjectsContainer extends RenderBox
     _markViewportChanged();
   }
 
-  bool _offsetsDirty = true;
   void _markViewportChanged() {
     __worldToView = null;
-    _offsetsDirty = true;
+    __viewToWorld = null;
     markNeedsPaint();
   }
-
-  void _updateChildOffsets() {
-    assert(
-      _offsetsDirty,
-      "[updateChildOffsets] was called but offsets weren't marked dirty",
-    );
-
-    _visitChildrenAndData((child, childData) {
-      var bounds = _positionedChildren.boundsOf(child);
-
-      // this child hasn't been sized/bounded yet
-      if (bounds == null) return;
-
-      // todo: maybe this transform should be done in applyPaintTransform? not sure
-      childData.offset = worldToBoxCoord(bounds.topLeft);
-    });
-
-    _offsetsDirty = false;
-  }
-
-  Offset worldToBoxCoord(Offset worldOffset) => worldOffset;
 
   @override
   void setupParentData(RenderBox child) {
@@ -191,26 +170,37 @@ final class RenderCanvasObjectsContainer extends RenderBox
   @override
   void performLayout() {
     size = getDryLayout(super.constraints);
+    _markViewportChanged();
+
+    var currDepth = 0.0;
 
     _visitChildrenAndData((child, childData) {
       _debugAssertIsPositioned(child, childData);
 
-      // todo: avoid laying out child if it is outside viewport/constraints
+      // if the child doesn't have a defined depth, just
+      // set it to one minus the depth of the last object
+      // without a depth
+      childData.depth ??= currDepth--;
 
-      var constraints = childData.computeConstraints();
+      // todo: avoid laying out child if it is outside viewport
 
-      child.layout(constraints, parentUsesSize: true);
+      var childConstraints = childData.computeConstraints();
+
+      child.layout(
+        childConstraints,
+        // we only care about the child's size if the child data doesn't
+        // already define a size; otherwise, we just lay it out because
+        // of protocol
+        parentUsesSize: childData.size == null,
+      );
 
       assert(child.size.isFinite);
 
-      var bounds = childData.computeBounds(child.size);
+      var bounds = childData.computeBounds(laidOutSize: child.size);
 
       _positionedChildren.update(child, bounds);
+      childData.offset = bounds.topLeft;
     });
-
-    // we updated our size and the position of every child, so we also need to
-    // recompute the offsets now
-    _markViewportChanged();
   }
 
   Matrix4? __worldToView;
@@ -219,58 +209,54 @@ final class RenderCanvasObjectsContainer extends RenderBox
     ..scaleByDouble(zoom.value, zoom.value, zoom.value, 1)
     ..translateByDouble(offset.value.dx, offset.value.dy, 0, 1);
 
-  Matrix4 get _viewToWorld => Matrix4.inverted(_worldToView);
+  Matrix4? __viewToWorld;
+  Matrix4 get _viewToWorld => __viewToWorld ??= Matrix4.inverted(_worldToView);
 
   void _applyViewportTransform(Matrix4 transform) =>
       transform.multiply(_worldToView);
 
   @override
   void applyPaintTransform(covariant RenderObject child, Matrix4 transform) {
-    assert(
-      !_offsetsDirty,
-      "applyPaintTransform called before updating child offsets",
-    );
-
     super.applyPaintTransform(child, transform);
     _applyViewportTransform(transform);
   }
 
   @override
-  void paint(PaintingContext context, Offset offset) {
-    if (_offsetsDirty) _updateChildOffsets();
+  void paint(PaintingContext context, Offset offset) => context.pushTransform(
+    needsCompositing,
+    offset,
+    _worldToView,
+    _paintInWorld,
+  );
 
-    Matrix4 transform = _worldToView;
+  void _paintInWorld(PaintingContext context, Offset offset) {
+    var viewport = Rect.fromLTRB(0, 0, size.width, size.height);
+    var visibleChildren = _positionedChildren.queryArea(viewport);
 
-    context.pushTransform(needsCompositing, offset, transform, _paintCore);
+    for (var child in visibleChildren.sortedByReverseDepth) {
+      var childPosition = (child.parentData as CanvasObjectParentData).offset;
+      child.paint(context, offset + childPosition);
+    }
   }
-
-  void _paintCore(PaintingContext context, Offset offset) =>
-      _visitChildrenAndData((child, childData) {
-        if (paintsChild(child)) child.paint(context, offset + childData.offset);
-      });
 
   static void _debugAssertIsPositioned(
     RenderBox child,
     CanvasObjectParentData childData,
   ) {
     assert(() {
-      if (childData.isPositioned) return true;
+      if (childData.position != null) return true;
 
       throw FlutterError.fromParts([
         ErrorSummary(
-          "Every canvas object has to be wrapped in a Positioned widget with an xy position",
-        ),
-        ErrorDescription(
-          "Canvas objects need to wrapped in a Positioned widget with both "
-          "a vertical (top/bottom) and horizontal (left/right) position.",
+          "Every canvas object has to be wrapped in a CanvasObject widget",
         ),
         DiagnosticsProperty("Position data", childData, expandableValue: true),
         ErrorHint(
-          "Wrap the canvas object in a Positioned widget with its top and "
-          "left properties set to the object's xy coordinates. If you did, "
-          "make sure the path from the Positioned widget to its enclosing "
-          "Canvas only contains StatelessWidgets or StatefulWidgets (not other "
-          "kinds of widgets, like RenderObjectWidgets)",
+          "Wrap the canvas object in a CanvasObject widget with its x and y "
+          "properties set to the object's coordinates. If you did, make sure "
+          "the path from the CanvasObject widget to its enclosing Canvas only "
+          "contains StatelessWidgets or StatefulWidgets (not other kinds of "
+          "widgets, like RenderObjectWidgets)",
         ),
       ]);
     }());
@@ -290,8 +276,8 @@ final class RenderCanvasObjectsContainer extends RenderBox
           // get all objects that overlap with the hit position
           var childrenAtPosition = _positionedChildren.queryPoint(position);
 
-          // then hit test each child
-          for (var child in childrenAtPosition) {
+          // then hit test each child, from closest (smallest depth) to furthest (biggest depth)
+          for (var child in childrenAtPosition.sortedByDepth) {
             var childPosition = (child.parentData as BoxParentData).offset;
 
             // offset the position to the child's position and hit test it
@@ -315,4 +301,12 @@ final class RenderCanvasObjectsContainer extends RenderBox
     super.dispose();
     _positionedChildren.clear();
   }
+}
+
+extension _SortByDepth on Iterable<RenderBox> {
+  Iterable<RenderBox> get sortedByDepth =>
+      sortedBy((child) => (child.parentData as CanvasObjectParentData).depth!);
+  Iterable<RenderBox> get sortedByReverseDepth => sortedBy(
+    (child) => (child.parentData as CanvasObjectParentData).depth!,
+  ).reversed;
 }

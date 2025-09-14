@@ -36,16 +36,27 @@ class _MyHomeState extends State<MyHome> {
   Widget build(BuildContext context) {
     return Canvas(
       objects: [
-        Positioned(
-          top: 0,
-          left: 0,
+        CanvasObject(
+          position: Offset.zero,
           child: Listener(
-            onPointerMove: (event) => print("move @ $event"),
+            onPointerHover: (event) => print("hover pink @ ${event.position}"),
             child: Container(
-              width: 1280,
-              height: 720,
+              width: 200,
+              height: 200,
               color: Colors.pink[200],
-              child: Text("hello"),
+              child: Center(child: Text("hello")),
+            ),
+          ),
+        ),
+        CanvasObject(
+          position: Offset(-50, 100),
+          child: Listener(
+            onPointerHover: (event) => print("hover blue @ ${event.position}"),
+            child: Container(
+              width: 150,
+              height: 150,
+              color: Colors.blue[300],
+              child: Center(child: Text("world")),
             ),
           ),
         ),

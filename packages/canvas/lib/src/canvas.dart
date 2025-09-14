@@ -58,3 +58,92 @@ final class _CanvasState extends State<Canvas> {
       ..add(IntProperty("objects", widget.objects.length));
   }
 }
+
+@immutable
+final class CanvasObject extends ParentDataWidget<CanvasObjectParentData> {
+  CanvasObject.atCoords({
+    super.key,
+    required double x,
+    required double y,
+    this.depth,
+    this.size,
+    required super.child,
+  }) : position = Offset(x, y);
+
+  const CanvasObject({
+    super.key,
+    required this.position,
+    this.depth,
+    this.size,
+    required super.child,
+  });
+
+  /// The xy coordinates of the object in the canvas.
+  ///
+  /// A canvas object exists inside the "world" of the canvas, which has its
+  /// own coordinate system, separate from the coordinates of other elements
+  /// on the screen. This world is navigated through changing [Canvas.offset]
+  /// and [Canvas.zoom]. The [Canvas] widget takes care of translating these
+  /// world coordinates into the viewport of the canvas, which is the fraction
+  /// of the world displayed in the widget.
+  final Offset position;
+
+  /// The exact size this object takes up in the canvas.
+  ///
+  /// By default, canvas objects are given infinite constraints and choose
+  /// their own size. This property can be used to give an object a specific,
+  /// pre-determined size to avoid having to it in a [SizedBox].
+  final Size? size;
+
+  /// The z-axis depth of this object.
+  ///
+  /// This determines the order in which
+  /// objects are not only painted but also hit-tested. Objects with a
+  /// shallower depth will be visually in front of others with a greater
+  /// depth, and will be hit-tested first.
+  ///
+  /// If this is unset, the reverse order of the child in the canvas object
+  /// list (i.e. [Canvas.children]) will be used instead: children defined
+  /// earlier in the list will be "deeper" than (or "behind") their later
+  /// depth-less siblings. This calculation is unaffected by any sibling with
+  /// a defined depth.
+  final double? depth;
+
+  @override
+  void applyParentData(RenderObject renderObject) {
+    assert(renderObject.parentData is CanvasObjectParentData);
+    var data = renderObject.parentData! as CanvasObjectParentData;
+    var parentNeedsLayout = false;
+
+    if (data.position != position) {
+      data.position = position;
+      parentNeedsLayout = true;
+    }
+
+    if (data.size != size) {
+      data.size = size;
+      parentNeedsLayout = true;
+    }
+
+    if (data.depth != depth) {
+      data.depth = depth;
+      parentNeedsLayout = true;
+    }
+
+    if (parentNeedsLayout) renderObject.parent?.markNeedsLayout();
+  }
+
+  @override
+  Type get debugTypicalAncestorWidgetClass =>
+      // technically it's CanvasObjectsContainer, but Canvas is the user-visible wrapper widget
+      Canvas;
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty("position", position))
+      ..add(DiagnosticsProperty("size", size, defaultValue: null))
+      ..add(DoubleProperty("depth", depth, defaultValue: null));
+  }
+}
