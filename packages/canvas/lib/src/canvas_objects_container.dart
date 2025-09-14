@@ -59,6 +59,15 @@ final class RenderCanvasObjectsContainer extends RenderBox
     _markViewportChanged();
   }
 
+  // |------------|
+  // | PROPERTIES |
+  // |------------|
+
+  SpatialHashGrid<RenderBox> _positionedChildren;
+
+  @override
+  bool get isRepaintBoundary => true;
+
   double _cellSize;
   double get cellSize => _cellSize;
   set cellSize(double newSize) {
@@ -72,11 +81,6 @@ final class RenderCanvasObjectsContainer extends RenderBox
       cellSize: newSize,
     );
   }
-
-  SpatialHashGrid<RenderBox> _positionedChildren;
-
-  @override
-  bool get isRepaintBoundary => true;
 
   ValueListenable<double> _zoom;
   ValueListenable<double> get zoom => _zoom;
@@ -102,19 +106,6 @@ final class RenderCanvasObjectsContainer extends RenderBox
     _markViewportChanged();
   }
 
-  void _markViewportChanged() {
-    __worldToView = null;
-    __viewToWorld = null;
-    markNeedsPaint();
-  }
-
-  @override
-  void setupParentData(RenderBox child) {
-    if (child.parentData is! CanvasObjectParentData) {
-      child.parentData = CanvasObjectParentData();
-    }
-  }
-
   @override
   void dropChild(RenderObject child) {
     assert(child is RenderBox);
@@ -129,15 +120,15 @@ final class RenderCanvasObjectsContainer extends RenderBox
     super.removeAll();
   }
 
-  void _visitChildrenAndData(
-    void Function(RenderBox child, CanvasObjectParentData childData) visitor,
-  ) => visitChildren(
-    (childObj) => visitor(
-      // it's always a RenderBox thanks to ContainerRenderObjectMixin<RenderBox, ...>
-      childObj as RenderBox,
-      childObj.parentData as CanvasObjectParentData,
-    ),
-  );
+  void _markViewportChanged() {
+    __worldToView = null;
+    __viewToWorld = null;
+    markNeedsPaint();
+  }
+
+  // |-----------------|
+  // | LAYOUT & BOUNDS |
+  // |-----------------|
 
   @override
   Size computeDryLayout(covariant BoxConstraints constraints) {
@@ -225,6 +216,10 @@ final class RenderCanvasObjectsContainer extends RenderBox
     });
   }
 
+  // |----------|
+  // | PAINTING |
+  // |----------|
+
   Matrix4? __worldToView;
   Matrix4 get _worldToView => __worldToView ??= Matrix4.identity()
     ..translateByDouble(size.width / 2, size.height / 2, 0, 1)
@@ -261,28 +256,9 @@ final class RenderCanvasObjectsContainer extends RenderBox
     }
   }
 
-  static void _debugAssertIsPositioned(
-    RenderBox child,
-    CanvasObjectParentData childData,
-  ) {
-    assert(() {
-      if (childData.position != null) return true;
-
-      throw FlutterError.fromParts([
-        ErrorSummary(
-          "Every canvas object has to be wrapped in a CanvasObject widget",
-        ),
-        DiagnosticsProperty("Position data", childData, expandableValue: true),
-        ErrorHint(
-          "Wrap the canvas object in a CanvasObject widget with its x and y "
-          "properties set to the object's coordinates. If you did, make sure "
-          "the path from the CanvasObject widget to its enclosing Canvas only "
-          "contains StatelessWidgets or StatefulWidgets (not other kinds of "
-          "widgets, like RenderObjectWidgets)",
-        ),
-      ]);
-    }());
-  }
+  // |----------|
+  // | HIT-TEST |
+  // |----------|
 
   // todo: implement hitTestSelf and add HitTestBehavior parameter to Canvas
 
@@ -317,6 +293,50 @@ final class RenderCanvasObjectsContainer extends RenderBox
           return false;
         },
       );
+
+  // |------|
+  // | MISC |
+  // |------|
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! CanvasObjectParentData) {
+      child.parentData = CanvasObjectParentData();
+    }
+  }
+
+  void _visitChildrenAndData(
+    void Function(RenderBox child, CanvasObjectParentData childData) visitor,
+  ) => visitChildren(
+    (childObj) => visitor(
+      // it's always a RenderBox thanks to ContainerRenderObjectMixin<RenderBox, ...>
+      childObj as RenderBox,
+      childObj.parentData as CanvasObjectParentData,
+    ),
+  );
+
+  static void _debugAssertIsPositioned(
+    RenderBox child,
+    CanvasObjectParentData childData,
+  ) {
+    assert(() {
+      if (childData.position != null) return true;
+
+      throw FlutterError.fromParts([
+        ErrorSummary(
+          "Every canvas object has to be wrapped in a CanvasObject widget",
+        ),
+        DiagnosticsProperty("Position data", childData, expandableValue: true),
+        ErrorHint(
+          "Wrap the canvas object in a CanvasObject widget with its x and y "
+          "properties set to the object's coordinates. If you did, make sure "
+          "the path from the CanvasObject widget to its enclosing Canvas only "
+          "contains StatelessWidgets or StatefulWidgets (not other kinds of "
+          "widgets, like RenderObjectWidgets)",
+        ),
+      ]);
+    }());
+  }
 
   @override
   void dispose() {
