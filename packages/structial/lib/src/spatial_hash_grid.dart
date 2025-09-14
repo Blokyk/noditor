@@ -68,7 +68,7 @@ class SpatialHashGrid<T> {
   /// The fixed size of each grid cell.
   ///
   /// {@template structial.spatial_grid.cellSize.perf}
-  /// Tweaking the value of `cellSize` is important for maximum performance;
+  /// Tweaking the value of [cellSize] is important for maximum performance;
   /// ideally, each cell should be big enough to contain the average object
   /// and no more.
   /// {@endtemplate}
@@ -114,11 +114,13 @@ class SpatialHashGrid<T> {
     return grid;
   }
 
-  factory SpatialHashGrid.from(SpatialHashGrid<T> otherGrid) =>
-      SpatialHashGrid.fromEntries(
-        otherGrid.entries.entries,
-        cellSize: otherGrid.cellSize,
-      );
+  factory SpatialHashGrid.from(
+    SpatialHashGrid<T> otherGrid, {
+    double? cellSize,
+  }) => SpatialHashGrid.fromEntries(
+    otherGrid.entries.entries,
+    cellSize: cellSize ?? otherGrid.cellSize,
+  );
 
   factory SpatialHashGrid.fromEntries(
     Iterable<MapEntry<T, Rect>> itemsAndBounds, {
