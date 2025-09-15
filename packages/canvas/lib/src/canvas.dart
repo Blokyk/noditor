@@ -7,14 +7,7 @@ import 'package:flutter/foundation.dart';
 final class Canvas extends StatefulWidget {
   final List<Widget> objects;
 
-  /// How this canvas should behave during hit testing when deciding how the
-  /// hit test propagates to children and whether to consider targets behind
-  /// this one.
-  ///
-  /// This defaults to [HitTestBehavior.opaque].
-  ///
-  /// See [HitTestBehavior] for the allowed values and their meanings.
-  final HitTestBehavior hitTestBehavior;
+  // todo: HitTestBehavior
 
   /// The size of the cells used for accelerating various operations in the
   /// canvas.
@@ -26,12 +19,7 @@ final class Canvas extends StatefulWidget {
   /// of every object in the canvas.
   final double cellSize;
 
-  const Canvas({
-    super.key,
-    required this.objects,
-    this.cellSize = 1024,
-    this.hitTestBehavior = HitTestBehavior.opaque,
-  });
+  const Canvas({super.key, required this.objects, this.cellSize = 1024});
 
   @override
   State<Canvas> createState() => _CanvasState();
@@ -66,7 +54,6 @@ final class _CanvasState extends State<Canvas> {
         offset: _offset,
         zoom: _zoom,
         cellSize: widget.cellSize,
-        hitTestBehavior: widget.hitTestBehavior,
         children: widget.objects,
       ),
     ],
