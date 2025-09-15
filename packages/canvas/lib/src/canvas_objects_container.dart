@@ -223,7 +223,7 @@ final class RenderCanvasObjectsContainer extends RenderBox
   Matrix4? __worldToView;
   Matrix4 get _worldToView => __worldToView ??= Matrix4.identity()
     ..translateByDouble(size.width / 2, size.height / 2, 0, 1)
-    ..scaleByDouble(zoom.value, zoom.value, zoom.value, 1)
+    ..scaleByDouble(zoom.value, zoom.value, 1, 1)
     ..translateByDouble(offset.value.dx, offset.value.dy, 0, 1);
 
   Matrix4? __viewToWorld;
