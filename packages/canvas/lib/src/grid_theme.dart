@@ -77,7 +77,7 @@ final class GridThemeData with Diagnosticable {
     this.lineWidth = 1.0,
     this.lineColor = const Color.fromARGB(100, 100, 100, 100),
     this.backgroundColor = Colors.black,
-    this.cellSize = const Size(64, 64),
+    this.cellSize = const Size(100, 100),
     this.intersectionSize = 2.0,
     this.intersectionColor = const Color.fromARGB(128, 150, 150, 150),
   });
