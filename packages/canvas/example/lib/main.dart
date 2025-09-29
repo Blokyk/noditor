@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart' hide Canvas;
 import 'package:canvas/canvas.dart';
 
@@ -16,7 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
+          brightness: Brightness.light,
         ),
       ),
       home: Material(child: MyHome()),
@@ -32,35 +34,29 @@ class MyHome extends StatefulWidget {
 }
 
 class _MyHomeState extends State<MyHome> {
+  static final rnd = Random();
+
   @override
   Widget build(BuildContext context) {
     return Canvas(
-      objects: [
-        CanvasObject(
-          position: Offset.zero,
-          child: Listener(
-            onPointerHover: (event) => print("hover pink @ ${event.position}"),
+      objects: List.generate(
+        1000,
+        (idx) => CanvasObject(
+          position: Offset(
+            (rnd.nextInt(100) - 50) * 100,
+            (rnd.nextInt(100) - 50) * 100,
+          ),
+          child: IgnorePointer(
             child: Container(
               width: 200,
               height: 200,
-              color: Colors.pink[200],
-              child: Center(child: Text("hello")),
+              color: Color(rnd.nextInt(0xFFFFFF)).withAlpha(255),
+              child: Text("Object $idx"),
             ),
           ),
         ),
-        CanvasObject(
-          position: Offset(-50, 100),
-          child: Listener(
-            onPointerHover: (event) => print("hover blue @ ${event.position}"),
-            child: Container(
-              width: 150,
-              height: 150,
-              color: Colors.blue[300],
-              child: Center(child: Text("world")),
-            ),
-          ),
-        ),
-      ],
+        growable: false,
+      ),
     );
   }
 }

@@ -9,6 +9,9 @@ final class Canvas extends StatefulWidget {
 
   final CanvasController? controller;
 
+  /// {@macro canvas.trackpadScrollCausesScale}
+  final bool trackpadScrollCausesScale;
+
   // todo: HitTestBehavior
 
   /// The size of the cells used for accelerating various operations in the
@@ -26,6 +29,7 @@ final class Canvas extends StatefulWidget {
     required this.objects,
     this.controller,
     this.cellSize = 1024,
+    this.trackpadScrollCausesScale = false,
   });
 
   @override

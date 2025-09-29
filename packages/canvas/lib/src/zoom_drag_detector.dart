@@ -4,7 +4,18 @@ import 'package:flutter/widgets.dart';
 final class ZoomDragDetector extends StatefulWidget {
   final CanvasController controller;
 
-  const ZoomDragDetector({super.key, required this.controller});
+  /// {@template canvas.trackpadScrollCausesScale}
+  /// Whether trackpad scrolling (on any axis) should be interpreted
+  /// as a zoom or not. If enabled, users cannot pan around using
+  /// two-finger gestures (which are interpreted as multi-axis scroll).
+  /// {@endtemplate}
+  final bool trackpadScrollCausesScale;
+
+  const ZoomDragDetector({
+    super.key,
+    required this.controller,
+    this.trackpadScrollCausesScale = false,
+  });
 
   @override
   State<ZoomDragDetector> createState() => _ZoomDragDetectorState();
@@ -28,14 +39,41 @@ class _ZoomDragDetectorState extends State<ZoomDragDetector> {
       var viewDelta = details.focalPointDelta / widget.controller.zoom.value;
       widget.controller.position.value -= viewDelta;
     } else {
-      widget.controller.zoom.value = _originalZoom * details.scale;
+      // sometimes, for some reason, the scale recognizer doesn't establish a good focal
+      // point, and instead just sets the focal point to the position where the pointer
+      // was last lifted.
+      var focalPoint = details.focalPoint != _maybeFakeFocalPoint
+          ? details.localFocalPoint
+          // when that happens, zoom into the center of the viewport instead
+          : widget.controller.viewportSize.value.center(Offset.zero);
+
+      widget.controller.setZoomAt(
+        _originalZoom * details.scale,
+        widget.controller.toCanvas(focalPoint),
+      );
     }
   }
 
+  // note: the (0, 0) value here *is* useful: if we never click
+  // anywhere, then flutter will use (0, 0) as the fake focal point
+  Offset _maybeFakeFocalPoint = Offset.zero;
+
+  void _onPointerDown(PointerDownEvent event) =>
+      _maybeFakeFocalPoint = event.position;
+  void _onPointerMove(PointerMoveEvent event) =>
+      _maybeFakeFocalPoint = event.position;
+  void _onPointerUp(PointerUpEvent event) =>
+      _maybeFakeFocalPoint = event.position;
+
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onScaleStart: _handleScaleStart,
-    onScaleUpdate: _handleScaleUpdate,
-    trackpadScrollCausesScale: true,
+  Widget build(BuildContext context) => Listener(
+    onPointerDown: _onPointerDown,
+    onPointerMove: _onPointerMove,
+    onPointerUp: _onPointerUp,
+    child: GestureDetector(
+      onScaleStart: _handleScaleStart,
+      onScaleUpdate: _handleScaleUpdate,
+      trackpadScrollCausesScale: widget.trackpadScrollCausesScale,
+    ),
   );
 }
