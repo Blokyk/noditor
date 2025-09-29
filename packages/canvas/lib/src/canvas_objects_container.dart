@@ -2,30 +2,23 @@ import 'package:canvas/canvas.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/foundation.dart';
 import 'package:structial/structial.dart';
 
 final class CanvasObjectsContainer extends MultiChildRenderObjectWidget {
-  final ValueListenable<double> zoom;
-  final ValueListenable<Offset> offset;
+  final CanvasController controller;
 
   final double cellSize;
 
   const CanvasObjectsContainer({
     super.key,
     required super.children,
-    required this.zoom,
-    required this.offset,
+    required this.controller,
     required this.cellSize,
   });
 
   @override
   RenderCanvasObjectsContainer createRenderObject(BuildContext context) =>
-      RenderCanvasObjectsContainer(
-        zoom: zoom,
-        offset: offset,
-        cellSize: cellSize,
-      );
+      RenderCanvasObjectsContainer(controller: controller, cellSize: cellSize);
 
   @override
   void updateRenderObject(
@@ -33,8 +26,7 @@ final class CanvasObjectsContainer extends MultiChildRenderObjectWidget {
     covariant RenderCanvasObjectsContainer renderObject,
   ) {
     renderObject
-      ..zoom = zoom
-      ..offset = offset
+      ..controller = controller
       ..cellSize = cellSize;
   }
 }
@@ -44,18 +36,16 @@ final class RenderCanvasObjectsContainer extends RenderBox
         ContainerRenderObjectMixin<RenderBox, CanvasObjectParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, CanvasObjectParentData> {
   RenderCanvasObjectsContainer({
-    required ValueListenable<double> zoom,
-    required ValueListenable<Offset> offset,
+    required CanvasController controller,
     required double cellSize,
     List<RenderBox>? children,
-  }) : _zoom = zoom,
-       _offset = offset,
+  }) : _controller = controller,
        _cellSize = cellSize,
        _positionedChildren = SpatialHashGrid(cellSize: cellSize) {
     addAll(children);
 
-    zoom.addListener(_markViewportChanged);
-    offset.addListener(_markViewportChanged);
+    _controller.zoom.addListener(_markViewportChanged);
+    _controller.position.addListener(_markViewportChanged);
     _markViewportChanged();
   }
 
@@ -82,26 +72,18 @@ final class RenderCanvasObjectsContainer extends RenderBox
     );
   }
 
-  ValueListenable<double> _zoom;
-  ValueListenable<double> get zoom => _zoom;
-  set zoom(ValueListenable<double> newZoom) {
-    if (identical(_zoom, newZoom)) return;
+  CanvasController _controller;
+  CanvasController get controller => _controller;
+  set controller(CanvasController newController) {
+    if (newController == _controller) return;
 
-    _zoom.removeListener(_markViewportChanged);
-    _zoom = newZoom;
-    _zoom.addListener(_markViewportChanged);
+    _controller.zoom.removeListener(_markViewportChanged);
+    _controller.position.removeListener(_markViewportChanged);
 
-    _markViewportChanged();
-  }
+    newController.zoom.addListener(_markViewportChanged);
+    newController.position.addListener(_markViewportChanged);
 
-  ValueListenable<Offset> _offset;
-  ValueListenable<Offset> get offset => _offset;
-  set offset(ValueListenable<Offset> newOffset) {
-    if (identical(_offset, newOffset)) return;
-
-    _offset.removeListener(_markViewportChanged);
-    _offset = newOffset;
-    _offset.addListener(_markViewportChanged);
+    _controller = newController;
 
     _markViewportChanged();
   }
@@ -121,8 +103,10 @@ final class RenderCanvasObjectsContainer extends RenderBox
   }
 
   void _markViewportChanged() {
-    __worldToView = null;
-    __viewToWorld = null;
+    // this setter was made exclusively for our use
+    // ignore: invalid_use_of_visible_for_testing_member
+    if (hasSize) _controller.viewportSize = size;
+
     markNeedsPaint();
   }
 
@@ -220,17 +204,8 @@ final class RenderCanvasObjectsContainer extends RenderBox
   // | PAINTING |
   // |----------|
 
-  Matrix4? __worldToView;
-  Matrix4 get _worldToView => __worldToView ??= Matrix4.identity()
-    ..translateByDouble(size.width / 2, size.height / 2, 0, 1)
-    ..scaleByDouble(zoom.value, zoom.value, 1, 1)
-    ..translateByDouble(offset.value.dx, offset.value.dy, 0, 1);
-
-  Matrix4? __viewToWorld;
-  Matrix4 get _viewToWorld => __viewToWorld ??= Matrix4.inverted(_worldToView);
-
   void _applyViewportTransform(Matrix4 transform) =>
-      transform.multiply(_worldToView);
+      transform.multiply(_controller.canvasToView);
 
   @override
   void applyPaintTransform(covariant RenderObject child, Matrix4 transform) {
@@ -239,16 +214,28 @@ final class RenderCanvasObjectsContainer extends RenderBox
   }
 
   @override
-  void paint(PaintingContext context, Offset offset) => context.pushTransform(
-    needsCompositing,
-    offset,
-    _worldToView,
-    _paintInWorld,
-  );
+  void paint(PaintingContext context, Offset offset) {
+    context.pushTransform(
+      needsCompositing,
+      offset,
+      _controller.canvasToView,
+      _paintInWorld,
+    );
+  }
 
   void _paintInWorld(PaintingContext context, Offset offset) {
     var viewport = Rect.fromLTRB(0, 0, size.width, size.height);
-    var visibleChildren = _positionedChildren.queryArea(viewport);
+
+    // the viewport when translated into the world coordinates used by canvas
+    // objects (and thus the spatial hash map)
+    var worldViewport = MatrixUtils.transformRect(
+      _controller.viewToCanvas,
+      viewport,
+    );
+
+    // print_mat4(_controller.viewToCanvas);
+
+    var visibleChildren = _positionedChildren.queryArea(worldViewport);
 
     for (var child in visibleChildren.sortedByReverseDepth) {
       var childPosition = (child.parentData as CanvasObjectParentData).offset;
@@ -266,7 +253,7 @@ final class RenderCanvasObjectsContainer extends RenderBox
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
       // transform the hit position from global/view coords to our world coord
       result.addWithRawTransform(
-        transform: _viewToWorld,
+        transform: _controller.viewToCanvas,
         position: position,
 
         // hitTest with the transformed position

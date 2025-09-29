@@ -271,7 +271,7 @@ final class _GridPainter extends CustomPainter {
     Matrix4 viewportTransform = Matrix4.identity()
       ..translateByDouble(size.width / 2, size.height / 2, 0, 1.0)
       ..scaleByDouble(zoom.value, zoom.value, 1.0, 1.0)
-      ..translateByDouble(offset.value.dx, offset.value.dy, 0, 1.0);
+      ..translateByDouble(-offset.value.dx, -offset.value.dy, 0, 1.0);
 
     canvas.transform(viewportTransform.storage);
 
