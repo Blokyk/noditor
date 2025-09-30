@@ -163,7 +163,7 @@ final class CanvasObject extends ParentDataWidget<CanvasObjectParentData> {
       parentNeedsLayout = true;
     }
 
-    if (data.depth != depth) {
+    if (depth != null && data.depth != depth) {
       data.depth = depth;
       parentNeedsLayout = true;
     }
