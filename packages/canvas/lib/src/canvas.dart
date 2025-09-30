@@ -65,7 +65,12 @@ final class _CanvasState extends State<Canvas> {
     // clip background + object container
     clipBehavior: Clip.hardEdge,
     children: [
-      Positioned.fill(child: ZoomDragDetector(controller: _controller)),
+      Positioned.fill(
+        child: ZoomDragDetector(
+          controller: _controller,
+          trackpadScrollCausesScale: widget.trackpadScrollCausesScale,
+        ),
+      ),
       Positioned.fill(
         child: GridBackground.empty(
           hitTestBehavior: HitTestBehavior.translucent,
