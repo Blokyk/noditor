@@ -1,12 +1,20 @@
 import 'package:canvas/src/canvas.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/gestures.dart';
 
 class DraggableObject extends StatefulWidget {
   final Widget child;
+
+  // todo: add option to automatically set to top depth when dragged
+  final double? depth;
+
   final ValueNotifier<Offset>? position;
 
-  const DraggableObject({super.key, this.position, required this.child});
+  const DraggableObject({
+    super.key,
+    this.position,
+    this.depth,
+    required this.child,
+  });
 
   @override
   State<StatefulWidget> createState() => _DraggableObjectState();
@@ -40,6 +48,11 @@ class _DraggableObjectState extends State<DraggableObject> {
   @override
   Widget build(BuildContext context) => CanvasObject(
     position: _position.value,
-    child: GestureDetector(onPanUpdate: _handleDragUpdate),
+    depth: widget.depth,
+    child: Draggable(
+      onDragUpdate: _handleDragUpdate,
+      feedback: SizedBox.fromSize(size: Size.zero),
+      child: widget.child,
+    ),
   );
 }

@@ -26,33 +26,28 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHome extends StatefulWidget {
-  const MyHome({super.key});
-
-  @override
-  State<MyHome> createState() => _MyHomeState();
-}
-
-class _MyHomeState extends State<MyHome> {
+class MyHome extends StatelessWidget {
   static final rnd = Random();
+
+  const MyHome({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Canvas(
       objects: List.generate(
         1000,
-        (idx) => CanvasObject(
-          position: Offset(
-            (rnd.nextInt(100) - 50) * 100,
-            (rnd.nextInt(100) - 50) * 100,
-          ),
-          child: IgnorePointer(
-            child: Container(
-              width: 200,
-              height: 200,
-              color: Color(rnd.nextInt(0xFFFFFF)).withAlpha(255),
-              child: Text("Object $idx"),
+        (idx) => DraggableObject(
+          position: ValueNotifier(
+            Offset(
+              (rnd.nextInt(100) - 50) * 100,
+              (rnd.nextInt(100) - 50) * 100,
             ),
+          ),
+          child: Container(
+            width: 200,
+            height: 200,
+            color: Color(rnd.nextInt(0xFFFFFF)).withAlpha(255),
+            child: Text("Object $idx"),
           ),
         ),
         growable: false,
