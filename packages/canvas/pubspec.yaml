@@ -9,8 +9,9 @@ environment:
 resolution: workspace
 
 dependencies:
+  structial: any
+
   collection: ^1.19.1
-  structial: ^1.0.0
   vector_math: ^2.2.0
 
 dev_dependencies:

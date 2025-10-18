@@ -9,6 +9,7 @@ workspace:
   - packages/canvas
   - packages/canvas/example
   - packages/noditor
+  - packages/noditor/example
   - packages/structial
 
 dependencies:
