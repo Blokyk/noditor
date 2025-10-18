@@ -205,7 +205,7 @@ final class CanvasController with Diagnosticable {
   void setZoomAt(double newZoom, Offset canvasFocalPoint) {
     var zoomDelta = zoom.value / newZoom;
 
-    print('zoom delta: $zoomDelta');
+    // print('zoom delta: $zoomDelta');
 
     // to figure out the new center position, we interpolate between the old
     // center and the point we're trying to zoom into. that way, the viewport's
@@ -224,9 +224,9 @@ final class CanvasController with Diagnosticable {
       1 - zoomDelta,
     )!;
 
-    print(
-      'center: $newCenter (${(position.value - newCenter).distance} units away)',
-    );
+    // print(
+    //   'center: $newCenter (${(position.value - newCenter).distance} units away)',
+    // );
 
     zoom.value = newZoom;
     position.value = newCenter;
